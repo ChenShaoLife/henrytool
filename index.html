@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToolBox - 极简工具集</title>
+    <style>
+        /* ==================== CSS变量与主题设置 ==================== */
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #60a5fa;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-tertiary: #f3f4f6;
+            --bg-card: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-tertiary: #9ca3af;
+            --border: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --primary: #60a5fa;
+            --primary-dark: #3b82f6;
+            --primary-light: #93bbfc;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-tertiary: #94a3b8;
+            --border: #334155;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ==================== 基础样式 ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: var(--transition);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ==================== 容器与布局 ==================== */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ==================== 导航栏 ==================== */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            transition: var(--transition);
+        }
+
+        header.scrolled {
+            backdrop-filter: blur(20px);
+            background: rgba(var(--bg-primary-rgb), 0.8);
+            box-shadow: var(--shadow-md);
+        }
+
+        nav {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .nav-brand svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 8px;
+        }
+
+        .nav-menu a {
+            padding: 8px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .nav-menu a:hover {
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+        }
+
+        .nav-menu a.active {
+            color: var(--primary);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            width: 240px;
+            height: 40px;
+            padding: 0 40px 0 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            outline: none;
+            color: var(--text-primary);
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            width: 280px;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+            pointer-events: none;
+        }
+
+        /* 主题切换按钮 */
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-primary);
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-tertiary);
+            transform: rotate(180deg);
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .mobile-menu-btn span {
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: var(--text-primary);
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .mobile-menu-btn span::before,
+        .mobile-menu-btn span::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 2px;
+            background: var(--text-primary);
+            transition: var(--transition);
+        }
+
+        .mobile-menu-btn span::before {
+            top: -6px;
+        }
+
+        .mobile-menu-btn span::after {
+            bottom: -6px;
+        }
+
+        .mobile-menu-btn.active span {
+            background: transparent;
+        }
+
+        .mobile-menu-btn.active span::before {
+            top: 0;
+            transform: rotate(45deg);
+        }
+
+        .mobile-menu-btn.active span::after {
+            bottom: 0;
+            transform: rotate(-45deg);
+        }
+
+        /* ==================== Hero区域 ==================== */
+        .hero {
+            padding: 120px 0 80px;
+            background: var(--bg-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, var(--primary), transparent);
+            opacity: 0.05;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(120deg); }
+            66% { transform: translate(-20px, 20px) rotate(240deg); }
+        }
+
+        .hero-content {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-title {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1rem, 2vw, 1.25rem);
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-tertiary);
+            transform: translateY(-2px);
+        }
+
+        /* ==================== 统计区域 ==================== */
+        .stats {
+            padding: 40px 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            text-align: center;
+        }
+
+        .stat-item {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* ==================== 工具分类区 ==================== */
+        .categories {
+            padding: 80px 0;
+            background: var(--bg-primary);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .section-description {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 40px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .category-tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .category-tabs::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 2px;
+        }
+
+        .category-tabs::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .tab-btn {
+            padding: 10px 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .tab-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .tool-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            transition: var(--transition);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            transform: translateX(-100%);
+            transition: transform 0.3s;
+        }
+
+        .tool-card:hover::before {
+            transform: translateX(0);
+        }
+
+        .tool-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .tool-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .tool-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .tool-info {
+            flex: 1;
+        }
+
+        .tool-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .tool-category {
+            font-size: 0.875rem;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .tool-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .tool-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .tool-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+        }
+
+        .tool-action {
+            color: var(--primary);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* ==================== 特色工具区 ==================== */
+        .featured {
+            padding: 80px 0;
+            background: var(--bg-secondary);
+        }
+
+        .featured-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 32px;
+            margin-top: 60px;
+        }
+
+        .featured-card {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 20px;
+            padding: 40px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .featured-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .featured-card:hover {
+            transform: scale(1.02);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .featured-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            margin-bottom: 16px;
+        }
+
+        .featured-title {
+            font-size: 1.75rem;
+            margin-bottom: 12px;
+        }
+
+        .featured-description {
+            opacity: 0.9;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .featured-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* ==================== CTA区域 ==================== */
+        .cta {
+            padding: 80px 0;
+            background: var(--bg-primary);
+            text-align: center;
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            border-radius: 24px;
+            padding: 60px 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta-title {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .cta-description {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            font-size: 1.1rem;
+        }
+
+        /* ==================== 页脚 ==================== */
+        footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 60px 0 30px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-section h3 {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 12px;
+        }
+
+        .social-link {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .social-link:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .footer-bottom {
+            padding-top: 30px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-tertiary);
+        }
+
+        /* ==================== 动画 ==================== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* ==================== 响应式设计 ==================== */
+        @media (max-width: 768px) {
+            .nav-menu {
+                position: fixed;
+                top: 64px;
+                left: -100%;
+                right: 0;
+                background: var(--bg-primary);
+                flex-direction: column;
+                padding: 20px;
+                border-bottom: 1px solid var(--border);
+                box-shadow: var(--shadow-lg);
+                transition: left 0.3s ease;
+            }
+
+            .nav-menu.active {
+                left: 0;
+            }
+
+            .search-input {
+                width: 150px;
+            }
+
+            .search-input:focus {
+                width: 180px;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .featured-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ==================== 加载动画 ==================== */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-tertiary) 50%, var(--bg-secondary) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ==================== 自定义滚动条 ==================== */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <header id="header">
+        <nav class="container">
+            <a href="#" class="nav-brand">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" rx="2" fill="currentColor" opacity="0.8"/>
+                    <rect x="14" y="3" width="7" height="7" rx="2" fill="currentColor" opacity="0.6"/>
+                    <rect x="3" y="14" width="7" height="7" rx="2" fill="currentColor" opacity="0.6"/>
+                    <rect x="14" y="14" width="7" height="7" rx="2" fill="currentColor" opacity="0.4"/>
+                </svg>
+                ToolBox
+            </a>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="#home" class="active">首页</a></li>
+                <li><a href="#categories">工具分类</a></li>
+                <li><a href="#featured">精选工具</a></li>
+                <li><a href="#about">关于</a></li>
+                <li><a href="#contact">联系</a></li>
+            </ul>
+            
+            <div class="nav-actions">
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="搜索工具..." id="searchInput">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/>
+                        <line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                        <line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                </button>
+                
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="菜单">
+                    <span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero区域 -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">极简高效的在线工具集</h1>
+                <p class="hero-subtitle">汇聚100+精心设计的实用工具，让复杂的任务变得简单，提升您的工作效率</p>
+                <div class="hero-buttons">
+                    <a href="#categories" class="btn btn-primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>
+                        开始使用
+                    </a>
+                    <a href="#featured" class="btn btn-secondary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 11H3m6 0L7 9m2 2l-2 2M21 11h-6m6 0l-2-2m2 2l-2 2M12 22V16m0 6l-2-2m2 2l2-2M12 2v6m0-6L10 4m2-2l2 2"/>
+                        </svg>
+                        探索功能
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 统计区域 -->
+    <section class="stats">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number" data-count="100">0</div>
+                    <div class="stat-label">专业工具</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" data-count="50000">0</div>
+                    <div class="stat-label">活跃用户</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" data-count="99">0</div>
+                    <div class="stat-label">用户满意度%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" data-count="24">0</div>
+                    <div class="stat-label">小时支持</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 工具分类 -->
+    <section class="categories" id="categories">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">工具分类</h2>
+                <p class="section-description">按类别浏览，快速找到您需要的工具</p>
+            </div>
+            
+            <div class="category-tabs">
+                <button class="tab-btn active" data-category="all">全部工具</button>
+                <button class="tab-btn" data-category="text">文本处理</button>
+                <button class="tab-btn" data-category="image">图片编辑</button>
+                <button class="tab-btn" data-category="dev">开发工具</button>
+                <button class="tab-btn" data-category="calc">计算转换</button>
+                <button class="tab-btn" data-category="file">文件处理</button>
+            </div>
+            
+            <div class="tools-grid" id="toolsGrid">
+                <!-- 文本处理工具 -->
+                <div class="tool-card" data-category="text">
+                    <div class="tool-header">
+                        <div class="tool-icon">📝</div>
+                        <div class="tool-info">
+                            <h3 class="tool-name">文本对比</h3>
+                            <span class="tool-category">文本处理</span>
+                        </div>
+                    </div>
+                    <p class="tool-description">在线对比两段文本的差异，高亮显示不同之处，支持多种对比模式</p>
+                    <div class="tool-footer">
+                        <div class="tool-stats">
+                            <span>⭐ 4.9</span>
+                            <span>👁 12.3k</span>
+                        </div>
+                        <span class="tool-action">
+                            使用 
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 图片编辑工具 -->
+                <div class="tool-card" data-category="image">
+                    <div class="tool-header">
+                        <div class="tool-icon">🖼️</div>
+                        <div class="tool-info">
+                            <h3 class="tool-name">图片压缩</h3>
+                            <span class="tool-category">图片编辑</span>
+                        </div>
+                    </div>
+                    <p class="tool-description">智能压缩图片大小，保持高质量的同时大幅减少文件体积</p>
+                    <div class="tool-footer">
+                        <div class="tool-stats">
+                            <span>⭐ 4.8</span>
+                            <span>👁 23.5k</span>
+                        </div>
+                        <span class="tool-action">
+                            使用 
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 开发工具 -->
+                <div class="tool-card" data-category="dev">
+                    <div class="tool-header">
+                        <div class="tool-icon">🔧</div>
+                        <div class="tool-info">
+                            <h3 class="tool-name">JSON格式化</h3>
+                            <span class="tool-category">开发工具</span>
+                        </div>
+                    </div>
+                    <p class="tool-description">格式化、压缩、验证JSON数据，支持树形视图和语法高亮</p>
+                    <div class="tool-footer">
+                        <div class="tool-stats">
+                            <span>⭐ 5.0</span>
+                            <span>👁 45.2k</span>
+                        </div>
+                        <span class="tool-action">
+                            使用 
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 计算转换工具 -->
+                <div class="tool-card" data-category="calc">
+                    <div class="tool-header">
+                        <div class="tool-icon">🧮</div>
+                        <div class="tool-info">
+                            <h3 class="tool-name">单位转换</h3>
+                            <span class="tool-category">计算转换</span>
+                        </div>
+                    </div>
+                    <p class="tool-description">支持长度、重量、温度、速度等多种单位的实时转换</p>
+                    <div class="tool-footer">
+                        <div class="tool-stats">
+                            <span>⭐ 4.7</span>
+                            <span>👁 18.9k</span>
+                        </div>
+                        <span class="tool-action">
+                            使用 
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 文件处理工具 -->
+                <div class="tool-card" data-category="file">
+                    <div class="tool-header">
+                        <div class="tool-icon">📄</div>
+                        <div class="tool-info">
+                            <h3 class="tool-name">PDF合并</h3>
+                            <span class="tool-category">文件处理</span>
+                        </div>
+                    </div>
+                    <p class="tool-description">快速合并多个PDF文件，支持调整页面顺序和删除特定页面</p>
+                    <div class="tool-footer">
+                        <div class="tool-stats">
+                            <span>⭐ 4.9</span>
+                            <span>👁 34.1k</span>
+                        </div>
+                        <span class="tool-action">
+                            使用 
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 更多工具卡片 -->
+                <div class="tool-card" data-category="text">
+                    <div class="tool-header">
+                        <div class="tool-icon">✍️</div>
+                        <div class="tool-info">
+                            <h3 class="tool-name">Markdown编辑器</h3>
+                            <span class="tool-category">文本处理</span>
+                        </div>
+                    </div>
+                    <p class="tool-description">实时预览的Markdown编辑器，支持导出HTML和PDF格式</p>
+                    <div class="tool-footer">
+                        <div class="tool-stats">
+                            <span>⭐ 4.8</span>
+                            <span>👁 28.7k</span>
+                        </div>
+                        <span class="tool-action">
+                            使用 
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 特色工具 -->
+    <section class="featured" id="featured">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">特色工具</h2>
+                <p class="section-description">精选最受欢迎的强大工具</p>
+            </div>
+            
+            <div class="featured-grid">
+                <div class="featured-card">
+                    <span class="featured-badge">⚡ 闪电快速</span>
+                    <h3 class="featured-title">批量图片处理</h3>
+                    <p class="featured-description">一次性处理多张图片，支持压缩、裁剪、格式转换等操作，大幅提升工作效率</p>
+                    <a href="#" class="featured-link">
+                        立即体验
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                            <polyline points="12 5 19 12 12 19"/>
+                        </svg>
+                    </a>
+                </div>
+                
+                <div class="featured-card" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                    <span class="featured-badge">🎨 创意设计</span>
+                    <h3 class="featured-title">调色板生成器</h3>
+                    <p class="featured-description">AI驱动的配色方案生成器，为您的设计项目提供完美的色彩搭配灵感</p>
+                    <a href="#" class="featured-link">
+                        立即体验
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                            <polyline points="12 5 19 12 12 19"/>
+                        </svg>
+                    </a>
+                </div>
+                
+                <div class="featured-card" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                    <span class="featured-badge">📊 数据分析</span>
+                    <h3 class="featured-title">Excel公式生成器</h3>
+                    <p class="featured-description">用自然语言描述需求，AI自动生成复杂的Excel公式，告别繁琐的公式编写</p>
+                    <a href="#" class="featured-link">
+                        立即体验
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                            <polyline points="12 5 19 12 12 19"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA区域 -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-box">
+                <h2 class="cta-title">准备好提升您的效率了吗？</h2>
+                <p class="cta-description">加入数万用户，体验最好用的在线工具集</p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary">立即开始</button>
+                    <button class="btn btn-secondary">了解更多</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ToolBox</h3>
+                    <p style="color: var(--text-secondary); margin: 16px 0;">极简高效的在线工具集，让工作更简单</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link" aria-label="Twitter">𝕏</a>
+                        <a href="#" class="social-link" aria-label="GitHub">⚡</a>
+                        <a href="#" class="social-link" aria-label="Discord">💬</a>
+                        <a href="#" class="social-link" aria-label="YouTube">▶️</a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>产品</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">功能介绍</a></li>
+                        <li><a href="#">价格方案</a></li>
+                        <li><a href="#">更新日志</a></li>
+                        <li><a href="#">路线图</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>支持</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">帮助中心</a></li>
+                        <li><a href="#">使用指南</a></li>
+                        <li><a href="#">API文档</a></li>
+                        <li><a href="#">联系我们</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>公司</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">关于我们</a></li>
+                        <li><a href="#">博客</a></li>
+                        <li><a href="#">加入我们</a></li>
+                        <li><a href="#">合作伙伴</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 ToolBox. All rights reserved. | <a href="#" style="color: var(--text-tertiary);">隐私政策</a> | <a href="#" style="color: var(--text-tertiary);">服务条款</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ==================== 主题切换功能 ====================
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        // 检查本地存储的主题偏好
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', currentTheme);
+        updateThemeIcon(currentTheme);
+        
+        // 主题切换事件
+        themeToggle.addEventListener('click', () => {
+            const theme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            updateThemeIcon(theme);
+        });
+        
+        // 更新主题图标
+        function updateThemeIcon(theme) {
+            const icon = themeToggle.querySelector('svg');
+            if (theme === 'dark') {
+                icon.innerHTML = `
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                `;
+            } else {
+                icon.innerHTML = `
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1" x2="12" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/>
+                    <line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                `;
+            }
+        }
+        
+        // ==================== 导航栏滚动效果 ====================
+        const header = document.getElementById('header');
+        let lastScroll = 0;
+        
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+            
+            lastScroll = currentScroll;
+        });
+        
+        // ==================== 移动端菜单 ====================
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.getElementById('navMenu');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenuBtn.classList.toggle('active');
+            navMenu.classList.toggle('active');
+        });
+        
+        // 点击导航链接关闭菜单
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenuBtn.classList.remove('active');
+                navMenu.classList.remove('active');
+            });
+        });
+        
+        // ==================== 分类标签切换 ====================
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const toolCards = document.querySelectorAll('.tool-card');
+        
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const category = btn.getAttribute('data-category');
+                
+                // 更新按钮状态
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // 过滤工具卡片
+                toolCards.forEach(card => {
+                    if (category === 'all' || card.getAttribute('data-category') === category) {
+                        card.style.display = 'block';
+                        card.classList.add('animate-fade-in');
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+        
+        // ==================== 搜索功能 ====================
+        const searchInput = document.getElementById('searchInput');
+        
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            toolCards.forEach(card => {
+                const toolName = card.querySelector('.tool-name').textContent.toLowerCase();
+                const toolDesc = card.querySelector('.tool-description').textContent.toLowerCase();
+                
+                if (toolName.includes(searchTerm) || toolDesc.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+        
+        // ==================== 数字动画 ====================
+        const animateNumbers = () => {
+            const numbers = document.querySelectorAll('[data-count]');
+            
+            numbers.forEach(num => {
+                const target = parseInt(num.getAttribute('data-count'));
+                const duration = 2000;
+                const increment = target / (duration / 16);
+                let current = 0;
+                
+                const updateNumber = () => {
+                    current += increment;
+                    if (current < target) {
+                        num.textContent = Math.floor(current).toLocaleString();
+                        requestAnimationFrame(updateNumber);
+                    } else {
+                        num.textContent = target.toLocaleString();
+                    }
+                };
+                
+                updateNumber();
+            });
+        };
+        
+        // 使用 Intersection Observer 触发动画
+        const statsObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateNumbers();
+                    statsObserver.disconnect();
+                }
+            });
+        });
+        
+        const statsSection = document.querySelector('.stats');
+        if (statsSection) {
+            statsObserver.observe(statsSection);
+        }
+        
+        // ==================== 平滑滚动 ====================
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // ==================== 导航链接高亮 ====================
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-menu a');
+        
+        window.addEventListener('scroll', () => {
+            let current = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').slice(1) === current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+        
+        // ==================== 工具卡片点击 ====================
+        toolCards.forEach(card => {
+            card.addEventListener('click', () => {
+                // 这里可以添加跳转逻辑
+                console.log('Tool clicked:', card.querySelector('.tool-name').textContent);
+            });
+        });
+        
+        // ==================== 页面加载动画 ====================
+        window.addEventListener('load', () => {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+    </script>
+</body>
+</html>
