@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevTools Hub - 开发者工具集合平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --text-muted: #484f58;
+            --border-color: #30363d;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-purple: #a371f7;
+            --accent-pink: #f778ba;
+            --gradient-purple: linear-gradient(135deg, #7c3aed, #a855f7);
+            --gradient-blue: linear-gradient(135deg, #0ea5e9, #6366f1);
+            --gradient-green: linear-gradient(135deg, #10b981, #34d399);
+            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-tertiary: #ffffff;
+            --text-primary: #24292f;
+            --text-secondary: #57606a;
+            --text-muted: #8c959f;
+            --border-color: #d1d9e0;
+            --accent-blue: #0969da;
+            --accent-green: #1a7f37;
+            --accent-purple: #8250df;
+            --accent-pink: #bf3989;
+            --card-shadow: 0 8px 24px rgba(140, 149, 159, 0.2);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(13, 17, 23, 0.85);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="light"] .navbar {
+            background: rgba(255, 255, 255, 0.85);
+        }
+
+        .nav-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-logo svg {
+            width: 32px;
+            height: 32px;
+            fill: var(--accent-blue);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .theme-toggle {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            font-size: 1.5rem;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        /* Hero 区域 */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: var(--bg-primary);
+            padding: 6rem 2rem 4rem;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, var(--accent-purple) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, var(--accent-blue) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, var(--accent-green) 0%, transparent 50%);
+            opacity: 0.05;
+            filter: blur(100px);
+        }
+
+        .hero-content {
+            max-width: 1280px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-title {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-blue) 50%, var(--accent-purple) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1.1rem, 3vw, 1.5rem);
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 4rem;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--gradient-blue);
+            color: white;
+            box-shadow: 0 4px 14px rgba(88, 166, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(88, 166, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-secondary);
+            border-color: var(--accent-blue);
+        }
+
+        /* 统计数据 */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+            padding: 2rem;
+            background: var(--bg-secondary);
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* 工具展示区 */
+        .tools-section {
+            padding: 4rem 2rem;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .section-description {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        /* 搜索框 */
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto 3rem;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1.25rem 1.5rem 1.25rem 3.5rem;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 0.75rem;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            background: var(--bg-tertiary);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+        }
+
+        /* 工具卡片网格 */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .tool-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-blue);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+            transform-origin: left;
+        }
+
+        .tool-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .tool-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-shadow);
+            border-color: var(--accent-blue);
+            background: var(--bg-tertiary);
+        }
+
+        .tool-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .tool-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .tool-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .tool-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .tool-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tool-category {
+            padding: 0.25rem 0.75rem;
+            background: var(--bg-primary);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--accent-green);
+            border: 1px solid var(--border-color);
+        }
+
+        .tool-arrow {
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+        }
+
+        .tool-card:hover .tool-arrow {
+            color: var(--accent-blue);
+            transform: translateX(4px);
+        }
+
+        /* 页脚 */
+        .footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 3rem 2rem;
+            margin-top: 6rem;
+        }
+
+        .footer-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+        }
+
+        .footer-section h3 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-blue);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* 动画 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate {
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .tool-card {
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .tool-card:nth-child(1) { animation-delay: 0.1s; }
+        .tool-card:nth-child(2) { animation-delay: 0.2s; }
+        .tool-card:nth-child(3) { animation-delay: 0.3s; }
+        .tool-card:nth-child(4) { animation-delay: 0.4s; }
+        .tool-card:nth-child(5) { animation-delay: 0.5s; }
+        .tool-card:nth-child(6) { animation-delay: 0.6s; }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+                </svg>
+                DevTools Hub
+            </a>
+            <div class="nav-actions">
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="切换主题">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero 区域 -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title animate">开发者工具集合平台</h1>
+            <p class="hero-subtitle animate" style="animation-delay: 0.2s;">
+                精选开发工具，提升工作效率。一站式解决方案，让编程更简单。
+            </p>
+            
+            <div class="hero-actions animate" style="animation-delay: 0.4s;">
+                <a href="#tools" class="btn btn-primary">
+                    <span>探索工具</span>
+                    <span>→</span>
+                </a>
+                <a href="#" class="btn btn-secondary">
+                    <span>⭐</span>
+                    <span>GitHub</span>
+                </a>
+            </div>
+
+            <div class="stats animate" style="animation-delay: 0.6s;">
+                <div class="stat-item">
+                    <div class="stat-number">50+</div>
+                    <div class="stat-label">在线工具</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">10K+</div>
+                    <div class="stat-label">活跃用户</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">99.9%</div>
+                    <div class="stat-label">可用性</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">全天候访问</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 工具展示区 -->
+    <section class="tools-section" id="tools">
+        <div class="section-header">
+            <h2 class="section-title">精选工具</h2>
+            <p class="section-description">为开发者精心准备的效率工具集</p>
+        </div>
+
+        <!-- 搜索框 -->
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" placeholder="搜索工具..." id="searchInput">
+        </div>
+
+        <!-- 工具卡片网格 -->
+        <div class="tools-grid" id="toolsGrid">
+            <!-- 工具卡片将通过 JavaScript 动态生成 -->
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>产品</h3>
+                <ul class="footer-links">
+                    <li><a href="#">功能特性</a></li>
+                    <li><a href="#">定价方案</a></li>
+                    <li><a href="#">更新日志</a></li>
+                    <li><a href="#">路线图</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>资源</h3>
+                <ul class="footer-links">
+                    <li><a href="#">文档</a></li>
+                    <li><a href="#">API</a></li>
+                    <li><a href="#">博客</a></li>
+                    <li><a href="#">社区</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>支持</h3>
+                <ul class="footer-links">
+                    <li><a href="#">帮助中心</a></li>
+                    <li><a href="#">联系我们</a></li>
+                    <li><a href="#">状态页面</a></li>
+                    <li><a href="#">反馈</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>关于</h3>
+                <ul class="footer-links">
+                    <li><a href="#">团队</a></li>
+                    <li><a href="#">隐私政策</a></li>
+                    <li><a href="#">服务条款</a></li>
+                    <li><a href="#">开源协议</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2024 DevTools Hub. Built with ❤️ by developers, for developers.</p>
+        </div>
+    </footer>
+
+    <script>
+        // 工具数据数组
+        const tools = [
+            {
+                id: 1,
+                name: "自定义银行卡封面",
+                description: "一款强大的在线银行卡设计工具，让您能够轻松创建个性化的银行卡设计。无论是用于学习、设计展示还是创意项目，这款工具都能满足您的需求。",
+                icon: "{ }",
+                category: "开发工具",
+                color: "#7c3aed",
+                url: "card.html"
+            },
+            {
+                id: 2,
+                name: "生日小票生成器",
+                description: "强大的 REST API 测试工具，支持 GET、POST、PUT、DELETE 等请求方法，实时查看响应结果。",
+                icon: "⚡",
+                category: "测试工具",
+                color: "#0ea5e9",
+                url: "happybirthday.html"
+            },
+            {
+                id: 3,
+                name: "JSON 编辑器",
+                description: "可视化 JSON 编辑器，支持语法高亮、格式化、压缩、验证等功能，让 JSON 处理更简单。",
+                icon: "📝",
+                category: "开发工具",
+                color: "#10b981",
+                url: "#json-editor"
+            },
+            {
+                id: 4,
+                name: "数据库设计",
+                description: "在线数据库设计工具，支持 ER 图绘制、SQL 生成、模型导出等功能，助力数据库架构设计。",
+                icon: "🗄️",
+                category: "设计工具",
+                color: "#f59e0b",
+                url: "#db-designer"
+            },
+            {
+                id: 5,
+                name: "正则表达式",
+                description: "实时测试和调试正则表达式，支持多种编程语言的语法，提供详细的匹配说明。",
+                icon: ".*",
+                category: "开发工具",
+                color: "#ef4444",
+                url: "#regex-tester"
+            },
+            {
+                id: 6,
+                name: "加密解密",
+                description: "多种加密算法支持，包括 MD5、SHA、AES、RSA 等，保障你的数据安全。",
+                icon: "🔐",
+                category: "安全工具",
+                color: "#8b5cf6",
+                url: "#crypto-tool"
+            },
+            {
+                id: 7,
+                name: "图片压缩",
+                description: "智能图片压缩工具，支持批量处理，在保持画质的同时大幅减小文件体积。",
+                icon: "🖼️",
+                category: "媒体工具",
+                color: "#ec4899",
+                url: "#image-compress"
+            },
+            {
+                id: 8,
+                name: "色彩工具",
+                description: "专业的色彩管理工具，支持调色板生成、颜色转换、对比度检查等功能。",
+                icon: "🎨",
+                category: "设计工具",
+                color: "#06b6d4",
+                url: "#color-tool"
+            },
+            {
+                id: 9,
+                name: "Markdown编辑器",
+                description: "实时预览的 Markdown 编辑器，支持导出 HTML、PDF，内置丰富的快捷键和主题。",
+                icon: "📄",
+                category: "编辑工具",
+                color: "#14b8a6",
+                url: "#markdown-editor"
+            }
+        ];
+
+        // 渲染工具卡片
+        function renderTools(toolsToRender = tools) {
+            const grid = document.getElementById('toolsGrid');
+            grid.innerHTML = '';
+            
+            toolsToRender.forEach(tool => {
+                const card = document.createElement('a');
+                card.href = tool.url;
+                card.className = 'tool-card';
+                
+                card.innerHTML = `
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: ${tool.color}">
+                            ${tool.icon}
+                        </div>
+                        <div class="tool-name">${tool.name}</div>
+                    </div>
+                    <div class="tool-description">${tool.description}</div>
+                    <div class="tool-footer">
+                        <span class="tool-category">${tool.category}</span>
+                        <span class="tool-arrow">→</span>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+
+        // 搜索功能
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const filtered = tools.filter(tool => 
+                tool.name.toLowerCase().includes(query) ||
+                tool.description.toLowerCase().includes(query) ||
+                tool.category.toLowerCase().includes(query)
+            );
+            renderTools(filtered);
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeIcon = document.querySelector('.theme-icon');
+            
+            if (html.getAttribute('data-theme') === 'light') {
+                html.removeAttribute('data-theme');
+                themeIcon.textContent = '🌙';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                html.setAttribute('data-theme', 'light');
+                themeIcon.textContent = '☀️';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // 加载保存的主题
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                document.querySelector('.theme-icon').textContent = '☀️';
+            }
+        }
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // 导航栏滚动效果
+        let lastScroll = 0;
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll > 100) {
+                navbar.style.background = 'rgba(13, 17, 23, 0.95)';
+                if (document.documentElement.getAttribute('data-theme') === 'light') {
+                    navbar.style.background = 'rgba(255, 255, 255, 0.95)';
+                }
+            } else {
+                navbar.style.background = 'rgba(13, 17, 23, 0.85)';
+                if (document.documentElement.getAttribute('data-theme') === 'light') {
+                    navbar.style.background = 'rgba(255, 255, 255, 0.85)';
+                }
+            }
+            
+            lastScroll = currentScroll;
+        });
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            renderTools();
+        });
+    </script>
+</body>
+</html>
