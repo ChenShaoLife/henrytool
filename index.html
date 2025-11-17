@@ -68,6 +68,12 @@
             overflow-x: hidden;
         }
 
+        /* 移除所有链接的下划线 */
+        a {
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
         /* ==================== 容器与布局 ==================== */
         .container {
             max-width: 1280px;
@@ -107,12 +113,22 @@
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--text-primary);
-            text-decoration: none;
+            position: relative;
+        }
+
+        .nav-brand:hover {
+            color: var(--primary);
+            transform: translateX(2px);
         }
 
         .nav-brand svg {
             width: 32px;
             height: 32px;
+            transition: var(--transition);
+        }
+
+        .nav-brand:hover svg {
+            transform: rotate(90deg) scale(1.1);
         }
 
         .nav-menu {
@@ -124,15 +140,33 @@
         .nav-menu a {
             padding: 8px 16px;
             color: var(--text-secondary);
-            text-decoration: none;
             border-radius: 8px;
             transition: var(--transition);
             font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-menu a::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transform: translateX(-50%);
+            transition: width 0.3s ease;
         }
 
         .nav-menu a:hover {
             color: var(--text-primary);
             background: var(--bg-secondary);
+            transform: translateY(-1px);
+        }
+
+        .nav-menu a:hover::before {
+            width: 80%;
         }
 
         .nav-menu a.active {
@@ -315,7 +349,6 @@
             padding: 12px 32px;
             border-radius: 12px;
             font-weight: 600;
-            text-decoration: none;
             transition: var(--transition);
             display: inline-flex;
             align-items: center;
@@ -323,6 +356,26 @@
             border: none;
             cursor: pointer;
             font-size: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
         }
 
         .btn-primary {
@@ -345,6 +398,7 @@
         .btn-secondary:hover {
             background: var(--bg-tertiary);
             transform: translateY(-2px);
+            border-color: var(--primary);
         }
 
         /* ==================== 统计区域 ==================== */
@@ -367,7 +421,7 @@
         }
 
         .stat-number {
-            font-size: 2.5rem;
+            font-size: clamp(2rem, 3vw, 2.5rem);
             font-weight: 700;
             color: var(--primary);
             margin-bottom: 8px;
@@ -375,7 +429,7 @@
 
         .stat-label {
             color: var(--text-secondary);
-            font-size: 0.95rem;
+            font-size: clamp(0.875rem, 1.5vw, 0.95rem);
         }
 
         /* ==================== 工具分类区 ==================== */
@@ -398,7 +452,7 @@
 
         .section-description {
             color: var(--text-secondary);
-            font-size: 1.1rem;
+            font-size: clamp(1rem, 1.5vw, 1.1rem);
         }
 
         .category-tabs {
@@ -407,6 +461,8 @@
             margin-bottom: 40px;
             overflow-x: auto;
             padding-bottom: 8px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) var(--bg-secondary);
         }
 
         .category-tabs::-webkit-scrollbar {
@@ -438,12 +494,15 @@
         .tab-btn:hover {
             background: var(--bg-tertiary);
             color: var(--text-primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .tab-btn.active {
             background: var(--primary);
             color: white;
             border-color: var(--primary);
+            transform: scale(1.05);
         }
 
         .tools-grid {
@@ -502,6 +561,11 @@
             justify-content: center;
             font-size: 1.5rem;
             flex-shrink: 0;
+            transition: var(--transition);
+        }
+
+        .tool-card:hover .tool-icon {
+            transform: rotate(10deg) scale(1.1);
         }
 
         .tool-info {
@@ -549,6 +613,11 @@
             display: flex;
             align-items: center;
             gap: 4px;
+            transition: var(--transition);
+        }
+
+        .tool-card:hover .tool-action {
+            transform: translateX(4px);
         }
 
         /* ==================== 特色工具区 ==================== */
@@ -559,7 +628,7 @@
 
         .featured-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr));
             gap: 32px;
             margin-top: 60px;
         }
@@ -584,6 +653,7 @@
             height: 200%;
             background: radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent);
             animation: rotate 20s linear infinite;
+            pointer-events: none;
         }
 
         @keyframes rotate {
@@ -603,10 +673,11 @@
             border-radius: 20px;
             font-size: 0.875rem;
             margin-bottom: 16px;
+            backdrop-filter: blur(10px);
         }
 
         .featured-title {
-            font-size: 1.75rem;
+            font-size: clamp(1.5rem, 2.5vw, 1.75rem);
             margin-bottom: 12px;
         }
 
@@ -614,6 +685,7 @@
             opacity: 0.9;
             line-height: 1.6;
             margin-bottom: 24px;
+            font-size: clamp(0.95rem, 1.5vw, 1rem);
         }
 
         .featured-link {
@@ -621,8 +693,28 @@
             align-items: center;
             gap: 8px;
             color: white;
-            text-decoration: none;
             font-weight: 600;
+            position: relative;
+            z-index: 1;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            transition: var(--transition);
+        }
+
+        .featured-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .featured-link svg {
+            transition: var(--transition);
+        }
+
+        .featured-link:hover svg {
+            transform: translateX(4px);
         }
 
         /* ==================== CTA区域 ==================== */
@@ -635,7 +727,7 @@
         .cta-box {
             background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
             border-radius: 24px;
-            padding: 60px 40px;
+            padding: clamp(40px, 5vw, 60px) clamp(20px, 4vw, 40px);
             max-width: 800px;
             margin: 0 auto;
         }
@@ -649,7 +741,7 @@
         .cta-description {
             color: var(--text-secondary);
             margin-bottom: 32px;
-            font-size: 1.1rem;
+            font-size: clamp(1rem, 1.5vw, 1.1rem);
         }
 
         /* ==================== 页脚 ==================== */
@@ -682,17 +774,35 @@
 
         .footer-links a {
             color: var(--text-secondary);
-            text-decoration: none;
             transition: var(--transition);
+            position: relative;
+            display: inline-block;
+        }
+
+        .footer-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--primary);
+            transition: width 0.3s ease;
         }
 
         .footer-links a:hover {
             color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .footer-links a:hover::after {
+            width: 100%;
         }
 
         .social-links {
             display: flex;
             gap: 12px;
+            flex-wrap: wrap;
         }
 
         .social-link {
@@ -704,14 +814,14 @@
             align-items: center;
             justify-content: center;
             color: var(--text-primary);
-            text-decoration: none;
             transition: var(--transition);
         }
 
         .social-link:hover {
             background: var(--primary);
             color: white;
-            transform: translateY(-2px);
+            transform: translateY(-4px) rotate(10deg);
+            box-shadow: var(--shadow-lg);
         }
 
         .footer-bottom {
@@ -719,6 +829,15 @@
             border-top: 1px solid var(--border);
             text-align: center;
             color: var(--text-tertiary);
+        }
+
+        .footer-bottom a {
+            color: var(--text-tertiary);
+            transition: var(--transition);
+        }
+
+        .footer-bottom a:hover {
+            color: var(--primary);
         }
 
         /* ==================== 动画 ==================== */
@@ -737,52 +856,169 @@
             animation: fadeInUp 0.6s ease-out;
         }
 
-        /* ==================== 响应式设计 ==================== */
+        /* ==================== 响应式设计 - 平板 ==================== */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 0 24px;
+            }
+
+            .tools-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 20px;
+            }
+
+            .featured-grid {
+                gap: 24px;
+            }
+
+            .hero {
+                padding: 100px 0 60px;
+            }
+
+            .categories,
+            .featured,
+            .cta {
+                padding: 60px 0;
+            }
+        }
+
+        /* ==================== 响应式设计 - 手机 ==================== */
         @media (max-width: 768px) {
             .nav-menu {
                 position: fixed;
                 top: 64px;
                 left: -100%;
-                right: 0;
+                width: 100%;
                 background: var(--bg-primary);
                 flex-direction: column;
                 padding: 20px;
                 border-bottom: 1px solid var(--border);
                 box-shadow: var(--shadow-lg);
                 transition: left 0.3s ease;
+                z-index: 999;
             }
 
             .nav-menu.active {
                 left: 0;
             }
 
-            .search-input {
-                width: 150px;
+            .nav-menu a {
+                width: 100%;
+                padding: 12px 16px;
+                margin-bottom: 8px;
             }
 
-            .search-input:focus {
-                width: 180px;
+            .search-container {
+                display: none;
             }
 
             .mobile-menu-btn {
                 display: flex;
             }
 
+            .hero {
+                padding: 80px 0 40px;
+            }
+
             .hero-buttons {
-                flex-direction: column;
-                align-items: center;
+                width: 100%;
+            }
+
+            .hero-buttons .btn {
+                width: 100%;
+                justify-content: center;
             }
 
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 24px;
+            }
+
+            .category-tabs {
+                padding: 0 0 12px;
             }
 
             .tools-grid {
                 grid-template-columns: 1fr;
+                gap: 16px;
             }
 
             .featured-grid {
                 grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .featured-card {
+                padding: 32px 24px;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .social-links {
+                justify-content: center;
+            }
+
+            .section-header {
+                margin-bottom: 40px;
+            }
+
+            .categories,
+            .featured,
+            .cta {
+                padding: 40px 0;
+            }
+        }
+
+        /* ==================== 响应式设计 - 小手机 ==================== */
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 16px;
+            }
+
+            nav {
+                height: 56px;
+            }
+
+            .nav-brand {
+                font-size: 1.25rem;
+            }
+
+            .nav-brand svg {
+                width: 28px;
+                height: 28px;
+            }
+
+            .theme-toggle,
+            .mobile-menu-btn {
+                width: 36px;
+                height: 36px;
+            }
+
+            .hero-title {
+                font-size: clamp(1.75rem, 8vw, 2.5rem);
+            }
+
+            .tool-card {
+                padding: 20px;
+            }
+
+            .featured-card {
+                padding: 28px 20px;
+            }
+
+            .cta-box {
+                border-radius: 20px;
+            }
+
+            .footer-section {
+                margin-bottom: 32px;
+            }
+
+            .footer-section:last-child {
+                margin-bottom: 0;
             }
         }
 
@@ -815,6 +1051,14 @@
 
         ::-webkit-scrollbar-thumb:hover {
             background: var(--primary-dark);
+        }
+
+        /* 移动端滚动条 */
+        @media (max-width: 768px) {
+            ::-webkit-scrollbar {
+                width: 4px;
+                height: 4px;
+            }
         }
     </style>
 </head>
@@ -1195,7 +1439,7 @@
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; 2024 ToolBox. All rights reserved. | <a href="#" style="color: var(--text-tertiary);">隐私政策</a> | <a href="#" style="color: var(--text-tertiary);">服务条款</a></p>
+                <p>&copy; 2024 ToolBox. All rights reserved. | <a href="#">隐私政策</a> | <a href="#">服务条款</a></p>
             </div>
         </div>
     </footer>
@@ -1300,20 +1544,22 @@
         // ==================== 搜索功能 ====================
         const searchInput = document.getElementById('searchInput');
         
-        searchInput.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            
-            toolCards.forEach(card => {
-                const toolName = card.querySelector('.tool-name').textContent.toLowerCase();
-                const toolDesc = card.querySelector('.tool-description').textContent.toLowerCase();
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
                 
-                if (toolName.includes(searchTerm) || toolDesc.includes(searchTerm)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
+                toolCards.forEach(card => {
+                    const toolName = card.querySelector('.tool-name').textContent.toLowerCase();
+                    const toolDesc = card.querySelector('.tool-description').textContent.toLowerCase();
+                    
+                    if (toolName.includes(searchTerm) || toolDesc.includes(searchTerm)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
             });
-        });
+        }
         
         // ==================== 数字动画 ====================
         const animateNumbers = () => {
