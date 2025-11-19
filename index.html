@@ -75,6 +75,7 @@
             box-sizing: border-box; 
         }
         
+        /* ⭐ 修改：body 使用 flexbox 布局 */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg-primary);
@@ -82,6 +83,10 @@
             line-height: 1.6;
             overflow-x: hidden;
             transition: background-color 0.3s, color 0.3s;
+            /* 新增 Flexbox 布局 */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         /* --- Material Icons 样式 --- */
@@ -289,11 +294,20 @@
             border-color: var(--primary-color);
         }
 
-        /* --- 工具卡片网格 (v11 Style) --- */
+        /* ⭐ 修改：添加主内容包装器 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ⭐ 修改：工具容器自动增长 */
         .tools-container {
             max-width: 1200px;
-            margin: 0 auto 4rem;
-            padding: 0 1.5rem;
+            margin: 0 auto;
+            padding: 0 1.5rem 4rem;
+            width: 100%;
+            flex: 1;
         }
 
         .tools-grid {
@@ -423,7 +437,7 @@
             opacity: 0.5; 
         }
 
-        /* --- Footer (v11 Style) --- */
+        /* ⭐ 修改：Footer 固定在底部 */
         .footer {
             background: var(--bg-secondary);
             border-top: 1px solid var(--border-color);
@@ -431,6 +445,7 @@
             text-align: center;
             color: var(--text-secondary);
             font-size: 0.9rem;
+            flex-shrink: 0;
         }
 
         .footer .mdi {
@@ -466,41 +481,44 @@
         </div>
     </nav>
 
-    <!-- Hero 区域 -->
-    <header class="hero">
-        <div class="hero-bg"></div>
-        <div class="hero-content">
-            <h1 class="hero-title">
-                <i class="mdi mdi-rocket-launch-outline"></i>
-                开发者工具箱
-            </h1>
-            <p class="hero-subtitle">
-                精心筛选的在线工具集合，为设计与开发提速。<br>
-                无需安装，即开即用。
-            </p>
-        </div>
-        
-        <!-- 搜索与筛选 -->
-        <div class="control-panel">
-            <div class="search-box">
-                <i class="search-icon mdi mdi-magnify"></i>
-                <input type="text" class="search-input" placeholder="搜索工具名称或描述..." id="searchInput">
+    <!-- ⭐ 新增主内容包装器 -->
+    <div class="main-content">
+        <!-- Hero 区域 -->
+        <header class="hero">
+            <div class="hero-bg"></div>
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    <i class="mdi mdi-rocket-launch-outline"></i>
+                    开发者工具箱
+                </h1>
+                <p class="hero-subtitle">
+                    精心筛选的在线工具集合，为设计与开发提速。<br>
+                    无需安装，即开即用。
+                </p>
             </div>
-            <div class="filter-tags" id="filterContainer">
-                <span class="filter-tag active" data-category="all">全部</span>
+            
+            <!-- 搜索与筛选 -->
+            <div class="control-panel">
+                <div class="search-box">
+                    <i class="search-icon mdi mdi-magnify"></i>
+                    <input type="text" class="search-input" placeholder="搜索工具名称或描述..." id="searchInput">
+                </div>
+                <div class="filter-tags" id="filterContainer">
+                    <span class="filter-tag active" data-category="all">全部</span>
+                </div>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <!-- 工具列表 -->
-    <section class="tools-container">
-        <div class="tools-grid" id="toolsGrid"></div>
-        
-        <div class="empty-state" id="emptyState">
-            <i class="mdi mdi-magnify-close empty-icon"></i>
-            <p>没有找到相关工具，换个关键词试试？</p>
-        </div>
-    </section>
+        <!-- 工具列表 -->
+        <section class="tools-container">
+            <div class="tools-grid" id="toolsGrid"></div>
+            
+            <div class="empty-state" id="emptyState">
+                <i class="mdi mdi-magnify-close empty-icon"></i>
+                <p>没有找到相关工具，换个关键词试试？</p>
+            </div>
+        </section>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">
@@ -510,8 +528,8 @@
     <script>
         // 工具数据（使用MDI图标）
         const tools = [
-            { id: 1, name: "票据生成器", desc: "智能生成各类票据，支持自定义店铺信息、商品列表，实时预览打印效果。", icon: "mdi-receipt-text-outline", category: "工具", color: "#007bff", url: "ticket.html" },
-            { id: 2, name: "银行卡封面生成", desc: "在线设计个性化银行卡面，支持自定义背景、卡号效果预览，设计展示必备工具。", icon: "mdi-credit-card-outline", category: "设计", color: "#8250df", url: "card.html" },
+            { id: 1, name: "银行卡封面生成", desc: "在线设计个性化银行卡面，支持自定义背景、卡号效果预览，设计展示必备工具。", icon: "mdi-credit-card-outline", category: "工具", color: "#007bff", url: "card.html" },
+            { id: 2, name: "生日小票生成器", desc: "生成网红风格的生日祝福小票，支持自定义祝福语、日期和清单项。", icon: "mdi-receipt-text-outline", category: "设计", color: "#8250df", url: "happybirthday.html" },
            /* { id: 3, name: "生日小票生成", desc: "生成网红风格的生日祝福小票，支持自定义祝福语、日期和清单项。", icon: "mdi-gift-outline", category: "设计", color: "#dc3545", url: "happybirthday.html" },
             { id: 4, name: "JSON 格式化", desc: "专业的 JSON 编辑与验证工具，支持树形折叠、语法高亮和错误定位。", icon: "mdi-code-json", category: "开发", color: "#28a745", url: "#json" },
             { id: 5, name: "SQL 架构设计", desc: "可视化的数据库 ER 图设计工具，支持一键导出 SQL 建表语句。", icon: "mdi-database-outline", category: "开发", color: "#f59e0b", url: "#db" },
