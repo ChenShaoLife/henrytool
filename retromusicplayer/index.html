@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Modern Deck</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;700&family=VT323&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              mono: ['"JetBrains Mono"', 'monospace'],
+              sans: ['"Inter"', 'sans-serif'],
+              led: ['"VT323"', 'monospace'],
+            },
+            colors: {
+              deck: {
+                base: '#0f0f10',
+                surface: '#18181b',
+                highlight: '#27272a',
+                accent: '#f97316', // Orange-500
+              }
+            },
+            animation: {
+              'spin-slow': 'spin 4s linear infinite',
+              'pan-x': 'pan-x 0.5s linear infinite',
+            },
+            keyframes: {
+                'pan-x': {
+                    '0%': { backgroundPosition: '0% 0%' },
+                    '100%': { backgroundPosition: '100% 0%' },
+                }
+            },
+            backgroundImage: {
+                'noise': "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22 opacity=%220.15%22/%3E%3C/svg%3E')",
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #333; 
+        border-radius: 2px;
+      }
+      body {
+        background-color: #000000;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "idb": "https://aistudiocdn.com/idb@^8.0.3"
+  }
+}
+</script>
+</head>
+  <body class="text-stone-200 antialiased overflow-hidden select-none touch-manipulation">
+    <div id="root"></div>
+  </body>
+</html>
