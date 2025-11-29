@@ -1,0 +1,5 @@
+{
+  "name": "RetroGroove Vinyl",
+  "description": "A high-fidelity retro vinyl music player with modern features. Supports folder playback, visual aesthetics, and persistent state.",
+  "requestFramePermissions": []
+}
