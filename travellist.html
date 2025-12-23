@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>智能旅行清单 - 终极版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .slide-in { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .check-anim { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .check-anim:active { transform: scale(0.95); }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        .modal-enter { animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        #print-area {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background: white;
+            color: #333;
+            box-sizing: border-box;
+        }
+        .print-col { width: 48%; box-sizing: border-box; }
+        .print-item {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding: 6px 0;
+        }
+        .print-box {
+            width: 14px;
+            height: 14px;
+            border: 2px solid #ccc;
+            border-radius: 3px;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 pb-40">
+
+    <input type="file" id="import-file" class="hidden" accept=".json" onchange="app.handleFileImport(event)">
+
+    <!-- 顶部导航 -->
+    <div class="bg-white shadow-sm sticky top-0 z-20">
+        <div class="max-w-6xl mx-auto px-4 py-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                <div class="flex justify-between items-center w-full md:w-auto">
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                            <i data-lucide="luggage" class="text-blue-600"></i>
+                            旅行清单
+                        </h1>
+                        <p class="text-xs text-slate-500 mt-1">编辑 & 粘贴导入 & 一键清空</p>
+                    </div>
+                    <div class="flex gap-2 md:hidden">
+                        <button onclick="app.clearAll()" class="p-2 text-slate-400 hover:bg-red-50 hover:text-red-500 rounded-full transition" title="清空所有物品"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                        <button onclick="app.resetAll()" class="p-2 text-slate-400 hover:bg-slate-100 rounded-full transition" title="重置打勾状态"><i data-lucide="rotate-ccw" class="w-5 h-5"></i></button>
+                        <button onclick="app.showExportModal()" class="p-2 text-slate-400 hover:bg-slate-100 rounded-full transition" title="设置/导出"><i data-lucide="settings-2" class="w-5 h-5"></i></button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 w-full md:w-96">
+                    <div class="bg-blue-50 rounded-lg p-2.5 border border-blue-100">
+                        <div class="flex justify-between text-xs mb-1 font-bold text-blue-800">
+                            <span class="flex items-center gap-1"><i data-lucide="plane-takeoff" class="w-3 h-3"></i> 去程</span>
+                            <span id="trip-percent">0%</span>
+                        </div>
+                        <div class="w-full bg-blue-200 rounded-full h-1.5">
+                            <div id="trip-bar" class="bg-blue-600 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-2.5 border border-green-100">
+                        <div class="flex justify-between text-xs mb-1 font-bold text-green-800">
+                            <span class="flex items-center gap-1"><i data-lucide="home" class="w-3 h-3"></i> 回程</span>
+                            <span id="home-percent">0%</span>
+                        </div>
+                        <div class="w-full bg-green-200 rounded-full h-1.5">
+                            <div id="home-bar" class="bg-green-600 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hidden md:flex gap-2">
+                    <button onclick="app.clearAll()" class="p-2 text-slate-400 hover:bg-red-50 hover:text-red-500 rounded-full transition" title="清空所有"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                    <button onclick="app.resetAll()" class="p-2 text-slate-400 hover:bg-slate-100 rounded-full transition" title="重置状态"><i data-lucide="rotate-ccw" class="w-5 h-5"></i></button>
+                    <button onclick="app.showExportModal()" class="p-2 text-slate-400 hover:bg-slate-100 rounded-full transition" title="备份与导出"><i data-lucide="settings-2" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-3 items-center justify-between border-t border-slate-100 pt-2">
+                <div class="flex gap-3 text-[10px] text-slate-400 order-2 md:order-1">
+                    <span class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-orange-400"></div> 托运: <span id="checked-count" class="font-bold text-slate-600">0</span></span>
+                    <span class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-purple-400"></div> 手提: <span id="carry-count" class="font-bold text-slate-600">0</span></span>
+                    <span class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-teal-400"></div> 当地购入: <span id="local-count" class="font-bold text-slate-600">0</span></span>
+                </div>
+                <div class="w-full md:w-auto overflow-x-auto hide-scrollbar order-1 md:order-2">
+                    <div class="flex gap-2 min-w-max px-1" id="category-filters"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 列表容器 -->
+    <div class="max-w-6xl mx-auto px-4 py-4 min-h-[300px]">
+        <div id="item-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+        <div id="empty-state" class="hidden text-center py-12 col-span-full">
+            <i data-lucide="ghost" class="w-12 h-12 mx-auto mb-2 text-slate-300"></i>
+            <p class="text-slate-400 text-sm">还没有物品，快去添加吧！</p>
+        </div>
+    </div>
+
+    <!-- 底部添加栏 -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 p-3 shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.1)] z-30 safe-bottom">
+        <div class="max-w-2xl mx-auto w-full">
+            <div class="flex items-center justify-between gap-2 mb-2 overflow-x-auto hide-scrollbar">
+                <div class="flex gap-2 min-w-max">
+                    <select id="new-category" class="text-xs bg-slate-100 border-none rounded-lg px-2 py-1.5 text-slate-600 outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="essentials">证件/钱财</option>
+                        <option value="electronics">电子产品</option>
+                        <option value="clothes">衣物/鞋帽</option>
+                        <option value="toiletries">洗漱/药品</option>
+                        <option value="other" selected>其他</option>
+                    </select>
+                    <label class="flex items-center gap-1.5 bg-teal-50 px-2 py-1 rounded-lg cursor-pointer border border-teal-100 select-none">
+                        <input type="checkbox" id="is-local-buy" class="w-3.5 h-3.5 accent-teal-600 rounded">
+                        <span class="text-xs text-teal-700 font-medium">当地购买</span>
+                    </label>
+                </div>
+                <div class="flex bg-slate-100 rounded-lg p-1 shrink-0">
+                    <button onclick="app.setLuggageType('checked')" id="btn-type-checked" class="text-xs px-3 py-1 rounded-md transition-all shadow-sm bg-white text-orange-600 font-medium">托运</button>
+                    <button onclick="app.setLuggageType('carry')" id="btn-type-carry" class="text-xs px-3 py-1 rounded-md transition-all text-slate-400 hover:text-purple-600">手提</button>
+                </div>
+            </div>
+            <form onsubmit="app.addItem(event)" class="flex gap-2">
+                <input type="number" id="new-item-quantity" value="1" min="1" max="99" 
+                    class="w-16 bg-slate-50 border border-slate-300 text-center text-slate-800 text-sm rounded-xl px-2 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+                    placeholder="数量">
+                <input type="text" id="new-item-text" placeholder="添加物品..." 
+                    class="flex-1 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm">
+                <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white rounded-xl px-5 transition-colors flex items-center justify-center active:scale-95 shadow-md">
+                    <i data-lucide="plus" class="w-5 h-5"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 备份与导出模态框 -->
+    <div id="export-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 modal-enter shadow-2xl flex flex-col max-h-[85vh]">
+            <h3 class="text-lg font-bold text-slate-800 mb-1">备份与恢复</h3>
+            <p class="text-sm text-slate-500 mb-4">管理你的清单数据</p>
+            
+            <div class="space-y-3 overflow-y-auto pr-1">
+                <button onclick="app.exportImage()" class="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:bg-blue-50 hover:border-blue-200 transition group text-left">
+                    <div class="bg-blue-100 p-2 rounded-lg text-blue-600 group-hover:bg-blue-200"><i data-lucide="image" class="w-5 h-5"></i></div>
+                    <div><div class="font-bold text-slate-700">生成 A4 图片清单</div><div class="text-xs text-slate-400">自动分页，适合打印</div></div>
+                </button>
+
+                <button onclick="app.exportJSON()" class="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition group text-left">
+                    <div class="bg-slate-100 p-2 rounded-lg text-slate-600 group-hover:bg-slate-200"><i data-lucide="download" class="w-5 h-5"></i></div>
+                    <div><div class="font-bold text-slate-700">导出 JSON 备份</div><div class="text-xs text-slate-400">保存文件到本地</div></div>
+                </button>
+
+                <!-- 导入区域 -->
+                <div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
+                    <div class="flex items-center gap-2 mb-2 font-bold text-slate-700 text-sm">
+                        <i data-lucide="upload" class="w-4 h-4 text-orange-500"></i> 导入数据
+                    </div>
+                    
+                    <!-- 粘贴文本区域 -->
+                    <textarea id="import-text" placeholder='粘贴 JSON，格式示例：
+[
+  { "text": "护照", "category": "essentials", "type": "carry", "quantity": 1 }
+]' class="w-full h-24 text-xs p-2 border border-slate-300 rounded mb-2 font-mono focus:ring-1 focus:ring-orange-500 outline-none resize-none bg-white text-slate-600 placeholder-slate-400"></textarea>
+                    
+                    <div class="flex gap-2">
+                        <button onclick="app.handleTextImport()" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-xs py-2 rounded transition">粘贴并导入</button>
+                        <button onclick="document.getElementById('import-file').click()" class="flex-1 bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 text-xs py-2 rounded transition">选择文件...</button>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="app.closeExportModal()" class="w-full mt-4 py-2 text-slate-400 hover:text-slate-600 text-sm">关闭</button>
+        </div>
+    </div>
+
+    <!-- 物品编辑模态框 -->
+    <div id="edit-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-xs p-5 modal-enter shadow-2xl">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">修改物品</h3>
+            <input type="hidden" id="edit-id">
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs text-slate-500 block mb-1">物品名称</label>
+                    <input type="text" id="edit-name" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-500 block mb-1">数量</label>
+                    <input type="number" id="edit-quantity" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-500 block mb-1">分类</label>
+                    <select id="edit-category" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white outline-none focus:border-blue-500">
+                        <option value="essentials">证件/钱财</option>
+                        <option value="electronics">电子产品</option>
+                        <option value="clothes">衣物/鞋帽</option>
+                        <option value="toiletries">洗漱/药品</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-500 block mb-1">行李类型</label>
+                    <div class="flex gap-2">
+                        <button type="button" id="edit-type-checked" onclick="app.setEditType('checked')" class="flex-1 py-2 text-xs rounded border border-orange-200 bg-orange-50 text-orange-700 font-medium">托运</button>
+                        <button type="button" id="edit-type-carry" onclick="app.setEditType('carry')" class="flex-1 py-2 text-xs rounded border border-slate-200 text-slate-500">手提</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2 mt-6">
+                <button onclick="app.closeEditModal()" class="flex-1 py-2 text-sm text-slate-500 hover:bg-slate-100 rounded-lg">取消</button>
+                <button onclick="app.saveEditItem()" class="flex-1 py-2 text-sm bg-slate-900 text-white hover:bg-slate-800 rounded-lg">保存修改</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 打印区域 -->
+    <div id="print-area" class="fixed top-0 left-0 -z-50 bg-white text-slate-900 overflow-hidden" 
+         style="width: 794px; min-height: 1123px; transform: translateX(-9999px); background: white;">
+    </div>
+
+    <script>
+        const ICONS = {
+            trash: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-2 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>`,
+            check: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+            plane: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20"/><path d="M13 6l-7 1.5 1 5 3.5 1"/><path d="M13 6l6 3.5-3.5 7.5L10 16"/><path d="M13 6V2"/></svg>`,
+            home: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 2 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+            edit: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`
+        };
+
+        const CATEGORIES = [
+            { id: 'all', name: '全部' },
+            { id: 'essentials', name: '证件/钱财' },
+            { id: 'electronics', name: '电子产品' },
+            { id: 'clothes', name: '衣物/鞋帽' },
+            { id: 'toiletries', name: '洗漱/药品' },
+            { id: 'other', name: '其他' },
+        ];
+
+        const DEFAULT_ITEMS = [
+            { id: 1719234567890, text: 'GoPro Hero 11', category: 'electronics', quantity: 1, type: 'carry', isLocalBuy: false, trip: true, home: false, createdAt: '2024-05-20T10:00:00.000Z' },
+            { id: 1719234567891, text: '一次性内裤', category: 'clothes', quantity: 5, type: 'checked', isLocalBuy: false, trip: false, home: false, createdAt: '2024-05-20T10:05:00.000Z' },
+            { id: 1735017600000, text: "Simcard针", category: "electronics", quantity: 1, type: "carry", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T00:00:00.000Z" },
+            { id: 1735017600001, text: "底裤", category: "clothes", quantity: 5, type: "checked", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T00:05:00.000Z" },
+            { id: 1735017600002, text: "雨衣", category: "clothes", quantity: 1, type: "checked", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T00:10:00.000Z" },
+            { id: 1735017600003, text: "梳子", category: "toiletries", quantity: 1, type: "carry", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T00:15:00.000Z" },
+            { id: 1735017600004, text: "袜子", category: "clothes", quantity: 5, type: "checked", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T00:20:00.000Z" },
+            { id: 1735017600005, text: "墨镜", category: "clothes", quantity: 1, type: "carry", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T00:25:00.000Z" },
+            { id: 1735017600006, text: "牙膏", category: "toiletries", quantity: 1, type: "checked", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T00:30:00.000Z" },
+            { id: 1735017600007, text: "衣服", category: "clothes", quantity: 5, type: "checked", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T00:35:00.000Z" },
+            { id: 1735017600008, text: "长裤", category: "clothes", quantity: 2, type: "checked", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T00:40:00.000Z" },
+            { id: 1735017600009, text: "短裤", category: "clothes", quantity: 2, type: "checked", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T00:45:00.000Z" },
+            { id: 1735017600010, text: "相机", category: "electronics", quantity: 1, type: "carry", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T00:50:00.000Z" },
+            { id: 1735017600011, text: "电池", category: "electronics", quantity: 2, type: "carry", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T00:55:00.000Z" },
+            { id: 1735017600012, text: "书包", category: "other", quantity: 1, type: "carry", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T01:00:00.000Z" },
+            { id: 1735017600013, text: "压缩袋", category: "other", quantity: 5, type: "checked", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T01:05:00.000Z" },
+            { id: 1735017600014, text: "行李牌", category: "other", quantity: 1, type: "checked", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T01:10:00.000Z" },
+            { id: 1735017600015, text: "Passport", category: "essentials", quantity: 1, type: "carry", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T01:15:00.000Z" },
+            { id: 1735017600016, text: "钱", category: "essentials", quantity: 1, type: "carry", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T01:20:00.000Z" },
+            { id: 1735017600017, text: "手套", category: "clothes", quantity: 1, type: "checked", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T01:25:00.000Z" },
+            { id: 1735017600018, text: "羽绒服", category: "clothes", quantity: 1, type: "checked", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T01:30:00.000Z" },
+            { id: 1735017600019, text: "头发油", category: "toiletries", quantity: 1, type: "checked", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T01:35:00.000Z" },
+            { id: 1735017600020, text: "包鞋", category: "clothes", quantity: 1, type: "checked", isLocalBuy: false, trip: true, home: false, createdAt: "2025-12-24T01:40:00.000Z" }
+        ];
+
+        class App {
+            constructor() {
+                const saved = JSON.parse(localStorage.getItem('travel_checklist_v5')) || DEFAULT_ITEMS;
+                this.items = saved.map(i => ({ 
+                    createdAt: i.createdAt || new Date().toISOString(), 
+                    quantity: i.quantity || 1, 
+                    ...i 
+                })); 
+                this.activeCategory = 'all';
+                this.currentLuggageType = 'checked';
+                this.editingType = 'checked'; 
+                this.init();
+            }
+
+            init() {
+                this.renderCategories();
+                this.renderList();
+                this.updateStats();
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                } else {
+                    // lucide 未加载时，等待加载
+                    window.addEventListener('load', () => {
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
+                    });
+                }
+            }
+
+            save() {
+                localStorage.setItem('travel_checklist_v5', JSON.stringify(this.items));
+                this.updateStats();
+            }
+
+            formatTime(isoString) {
+                if (!isoString) return '';
+                const date = new Date(isoString);
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                const hour = date.getHours().toString().padStart(2, '0');
+                const minute = date.getMinutes().toString().padStart(2, '0');
+                return `${month}/${day} ${hour}:${minute}`;
+            }
+
+            renderCategories() {
+                const container = document.getElementById('category-filters');
+                container.innerHTML = CATEGORIES.map(cat => `
+                    <button onclick="app.setCategory('${cat.id}')" 
+                        class="px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap
+                        ${this.activeCategory === cat.id ? 'bg-slate-800 text-white shadow-md' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-100'}">
+                        ${cat.name}
+                    </button>
+                `).join('');
+            }
+
+            renderList() {
+                const container = document.getElementById('item-list');
+                const emptyState = document.getElementById('empty-state');
+                const filtered = this.activeCategory === 'all' ? this.items : this.items.filter(i => i.category === this.activeCategory);
+
+                if (filtered.length === 0) {
+                    container.innerHTML = '';
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+                emptyState.classList.add('hidden');
+
+                container.innerHTML = filtered.map(item => {
+                    const isDone = item.trip && item.home;
+                    const luggageClass = item.type === 'checked' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-purple-100 text-purple-700 border-purple-200';
+                    const luggageText = item.type === 'checked' ? '托运' : '手提';
+                    
+                    let tripBtnHtml;
+                    if (item.isLocalBuy) {
+                        tripBtnHtml = `<div class="flex-1 py-2 rounded-lg border border-slate-100 bg-slate-50 text-slate-400 flex items-center justify-center gap-1 text-xs cursor-not-allowed opacity-60"><span>无需携带</span></div>`;
+                    } else {
+                        tripBtnHtml = `
+                            <button onclick="app.toggleCheck(${item.id}, 'trip')" 
+                                class="check-anim flex-1 py-2 rounded-lg border flex items-center justify-center gap-2 text-sm font-medium transition-all
+                                ${item.trip ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200' : 'bg-white text-slate-400 border-slate-200 hover:border-blue-300 hover:text-blue-500'}">
+                                ${item.trip ? ICONS.check : ''} <span class="flex items-center gap-1 text-xs">${ICONS.plane} 去程</span>
+                            </button>`;
+                    }
+
+                    return `
+                    <div class="slide-in bg-white rounded-xl p-3 shadow-sm border border-slate-100 flex flex-col h-full hover:shadow-md transition-shadow ${isDone ? 'opacity-60 grayscale-[0.5]' : ''}">
+                        <div class="flex justify-between items-start mb-auto">
+                            <div class="flex-1 pr-2">
+                                <div class="flex items-start gap-2 mb-1">
+                                    <span class="bg-slate-100 text-slate-500 text-xs px-1.5 py-0.5 rounded font-bold">x${item.quantity}</span>
+                                    <div class="text-base font-medium break-words leading-tight ${isDone ? 'line-through text-slate-400' : 'text-slate-800'}" 
+                                         >${item.text}</div>
+                                </div>
+                                <div class="flex flex-wrap gap-1 items-center mt-2">
+                                    ${item.isLocalBuy ? `<span class="bg-teal-100 text-teal-700 border-teal-200 text-[10px] px-1.5 py-0.5 rounded border font-medium mr-1">当地购入</span>` : ''}
+                                    <span class="inline-flex items-center gap-1 ${luggageClass} text-[10px] px-1.5 py-0.5 rounded border font-medium">${luggageText}</span>
+                                    <span class="text-[10px] text-slate-400 bg-slate-100 px-1 rounded ml-1">${CATEGORIES.find(c => c.id === item.category)?.name || '其他'}</span>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <button onclick="app.deleteItem(${item.id})" class="text-slate-200 hover:text-red-500 transition p-1" title="删除">${ICONS.trash}</button>
+                                <button onclick="app.openEditModal(${item.id})" class="text-slate-200 hover:text-blue-500 transition p-1" title="修改">${ICONS.edit}</button>
+                            </div>
+                        </div>
+                        <div class="flex justify-end mt-1">
+                            <span class="text-[10px] text-slate-300 font-mono">${this.formatTime(item.createdAt)}</span>
+                        </div>
+                        <div class="flex gap-2 mt-2 pt-2 border-t border-slate-50">
+                            ${tripBtnHtml}
+                            <button onclick="app.toggleCheck(${item.id}, 'home')" class="check-anim flex-1 py-2 rounded-lg border flex items-center justify-center gap-2 text-sm font-medium transition-all ${item.home ? 'bg-green-600 text-white border-green-600 shadow-md shadow-green-200' : 'bg-white text-slate-400 border-slate-200 hover:border-green-300 hover:text-green-500'}">
+                                ${item.home ? ICONS.check : ''} <span class="flex items-center gap-1 text-xs">${ICONS.home} 回程</span>
+                            </button>
+                        </div>
+                    </div>`;
+                }).join('');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+
+            addItem(e) {
+                e.preventDefault();
+                const input = document.getElementById('new-item-text');
+                const quantityInput = document.getElementById('new-item-quantity');
+                const categorySelect = document.getElementById('new-category');
+                const isLocalBuyCheckbox = document.getElementById('is-local-buy');
+                
+                const text = input.value.trim();
+                const quantity = parseInt(quantityInput.value) || 1;
+                
+                if (!text) return;
+                const isLocal = isLocalBuyCheckbox.checked;
+
+                this.items.unshift({
+                    id: Date.now(),
+                    text: text,
+                    quantity: quantity,
+                    category: categorySelect.value,
+                    type: this.currentLuggageType,
+                    isLocalBuy: isLocal,
+                    trip: isLocal ? true : false,
+                    home: false,
+                    createdAt: new Date().toISOString()
+                });
+                this.save();
+                this.renderList();
+                input.value = '';
+                quantityInput.value = '1';
+                if(window.innerWidth > 768) input.focus();
+            }
+
+            deleteItem(id) {
+                if(confirm('删除此物品?')) {
+                    this.items = this.items.filter(i => i.id !== id);
+                    this.save();
+                    this.renderList();
+                }
+            }
+
+            openEditModal(id) {
+                const item = this.items.find(i => i.id === id);
+                if(!item) return;
+
+                document.getElementById('edit-id').value = id;
+                document.getElementById('edit-name').value = item.text;
+                document.getElementById('edit-quantity').value = item.quantity;
+                document.getElementById('edit-category').value = item.category;
+                
+                this.setEditType(item.type);
+                
+                document.getElementById('edit-modal').classList.remove('hidden');
+            }
+
+            setEditType(type) {
+                this.editingType = type;
+                const btnChecked = document.getElementById('edit-type-checked');
+                const btnCarry = document.getElementById('edit-type-carry');
+                
+                if(type === 'checked') {
+                    btnChecked.className = "flex-1 py-2 text-xs rounded border border-orange-200 bg-orange-50 text-orange-700 font-medium transition-colors";
+                    btnCarry.className = "flex-1 py-2 text-xs rounded border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors";
+                } else {
+                    btnChecked.className = "flex-1 py-2 text-xs rounded border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors";
+                    btnCarry.className = "flex-1 py-2 text-xs rounded border border-purple-200 bg-purple-50 text-purple-700 font-medium transition-colors";
+                }
+            }
+
+            saveEditItem() {
+                const id = parseInt(document.getElementById('edit-id').value);
+                const name = document.getElementById('edit-name').value.trim();
+                const quantity = parseInt(document.getElementById('edit-quantity').value);
+                const category = document.getElementById('edit-category').value;
+
+                if(!name || quantity < 1) {
+                    alert("请填写有效的名称和数量");
+                    return;
+                }
+
+                const itemIndex = this.items.findIndex(i => i.id === id);
+                if(itemIndex > -1) {
+                    this.items[itemIndex].text = name;
+                    this.items[itemIndex].quantity = quantity;
+                    this.items[itemIndex].category = category;
+                    this.items[itemIndex].type = this.editingType;
+                    this.save();
+                    this.renderList();
+                }
+                this.closeEditModal();
+            }
+
+            closeEditModal() {
+                document.getElementById('edit-modal').classList.add('hidden');
+            }
+
+            toggleCheck(id, field) {
+                const item = this.items.find(i => i.id === id);
+                if (item) { item[field] = !item[field]; this.save(); this.renderList(); }
+            }
+            setCategory(id) { this.activeCategory = id; this.renderCategories(); this.renderList(); }
+            setLuggageType(type) {
+                this.currentLuggageType = type;
+                document.getElementById('btn-type-checked').className = type === 'checked' ? "text-xs px-3 py-1 rounded-md transition-all shadow-sm bg-white text-orange-600 font-medium border border-orange-100" : "text-xs px-3 py-1 rounded-md transition-all text-slate-400 hover:text-orange-600 border border-transparent";
+                document.getElementById('btn-type-carry').className = type === 'carry' ? "text-xs px-3 py-1 rounded-md transition-all shadow-sm bg-white text-purple-600 font-medium border border-purple-100" : "text-xs px-3 py-1 rounded-md transition-all text-slate-400 hover:text-purple-600 border border-transparent";
+            }
+            
+            clearAll() {
+                if(confirm("⚠️ 确定要清空所有物品吗？\n此操作无法撤销！\n建议先备份数据。")) {
+                    if(confirm("再次确认：真的要删除全部吗？")) {
+                        this.items = [];
+                        this.save();
+                        this.renderList();
+                        this.updateStats();
+                    }
+                }
+            }
+
+            resetAll() {
+                if(confirm('重置所有打勾状态？(物品保留)')) {
+                    this.items.forEach(i => { i.trip = i.isLocalBuy ? true : false; i.home = false; });
+                    this.save(); this.renderList();
+                }
+            }
+            updateStats() {
+                const total = this.items.length;
+                if (total === 0) {
+                    document.getElementById('trip-percent').innerText = '0%'; document.getElementById('trip-bar').style.width = '0%';
+                    document.getElementById('home-percent').innerText = '0%'; document.getElementById('home-bar').style.width = '0%';
+                    document.getElementById('checked-count').innerText = 0; document.getElementById('carry-count').innerText = 0; document.getElementById('local-count').innerText = 0;
+                    return;
+                }
+                const tripCount = this.items.filter(i => i.trip).length;
+                const homeCount = this.items.filter(i => i.home).length;
+                document.getElementById('trip-percent').innerText = `${Math.round((tripCount / total) * 100)}%`;
+                document.getElementById('trip-bar').style.width = `${Math.round((tripCount / total) * 100)}%`;
+                document.getElementById('home-percent').innerText = `${Math.round((homeCount / total) * 100)}%`;
+                document.getElementById('home-bar').style.width = `${Math.round((homeCount / total) * 100)}%`;
+                document.getElementById('checked-count').innerText = this.items.filter(i => i.type === 'checked').length;
+                document.getElementById('carry-count').innerText = this.items.filter(i => i.type === 'carry').length;
+                document.getElementById('local-count').innerText = this.items.filter(i => i.isLocalBuy).length;
+            }
+
+            showExportModal() { document.getElementById('export-modal').classList.remove('hidden'); }
+            closeExportModal() { document.getElementById('export-modal').classList.add('hidden'); }
+            
+            exportJSON() {
+                const dataStr = JSON.stringify(this.items, null, 2);
+                const blob = new Blob([dataStr], { type: "text/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `旅行清单备份_${new Date().toLocaleDateString()}.json`;
+                a.click();
+                this.closeExportModal();
+            }
+
+            handleFileImport(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => this.processImport(e.target.result);
+                reader.readAsText(file);
+                event.target.value = ''; 
+            }
+
+            handleTextImport() {
+                const text = document.getElementById('import-text').value.trim();
+                if (!text) {
+                    alert("请先粘贴内容");
+                    return;
+                }
+                
+                // 尝试提取 JSON 部分 (处理 Markdown 代码块或多余文本)
+                let jsonStr = text;
+                const firstBracket = text.indexOf('[');
+                const lastBracket = text.lastIndexOf(']');
+                
+                if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+                    jsonStr = text.substring(firstBracket, lastBracket + 1);
+                }
+
+                this.processImport(jsonStr);
+                document.getElementById('import-text').value = '';
+            }
+
+            processImport(jsonString) {
+                try {
+                    const importedItems = JSON.parse(jsonString);
+                    if (Array.isArray(importedItems)) {
+                        const count = importedItems.length;
+                        
+                        // 弹出选择框
+                        const action = prompt(
+                            `成功解析 ${count} 条数据！\n\n请输入操作编号：\n1. 覆盖当前清单 (清空旧数据)\n2. 追加到当前清单 (保留旧数据)`, 
+                            "2"
+                        );
+
+                        if (action === "1" || action === "2") {
+                            // 数据清洗与迁移
+                            const validCategories = CATEGORIES.map(c => c.id);
+                            const cleanItems = importedItems.map((item, index) => ({
+                                ...item,
+                                id: Date.now() + index, // 重生成 ID 防止冲突
+                                category: validCategories.includes(item.category) ? item.category : 'other',
+                                createdAt: item.createdAt || new Date().toISOString()
+                            }));
+
+                            if (action === "1") {
+                                // 覆盖
+                                this.items = cleanItems;
+                            } else {
+                                // 追加 (新数据在后，或者在前？通常导入的数据可能想放前面或者后面)
+                                // 这里选择追加到后面，保留用户当前刚才加的东西在最前
+                                this.items = [...this.items, ...cleanItems];
+                            }
+                            
+                            this.save();
+                            this.activeCategory = 'all'; // 重置分类以便看到所有
+                            this.renderCategories(); 
+                            this.renderList();
+                            this.updateStats();
+                            
+                            alert(action === "1" ? "清单已覆盖！" : "物品已追加！");
+                            this.closeExportModal();
+                        }
+                    } else { 
+                        alert("数据格式错误：必须是 JSON 数组 [...]"); 
+                    }
+                } catch (error) { 
+                    alert("导入失败：无法解析 JSON 内容。\n请确保粘贴的是完整的 [ ... ] 格式数据。"); 
+                    console.error(error);
+                }
+            }
+
+            async exportImage() {
+                const checkedList = this.items.filter(i => i.type === 'checked');
+                const carryList = this.items.filter(i => i.type === 'carry');
+                
+                const ITEMS_PER_PAGE = 32; 
+                
+                const maxLen = Math.max(checkedList.length, carryList.length);
+                const totalPages = Math.ceil(maxLen / ITEMS_PER_PAGE) || 1;
+
+                this.closeExportModal();
+                
+                if (totalPages > 1) {
+                    alert(`物品较多，将自动拆分为 ${totalPages} 张图片进行下载。`);
+                }
+
+                for (let i = 0; i < totalPages; i++) {
+                    const pageChecked = checkedList.slice(i * ITEMS_PER_PAGE, (i + 1) * ITEMS_PER_PAGE);
+                    const pageCarry = carryList.slice(i * ITEMS_PER_PAGE, (i + 1) * ITEMS_PER_PAGE);
+                    
+                    await this.generateSinglePage(i + 1, totalPages, pageChecked, pageCarry);
+                    
+                    if (i < totalPages - 1) {
+                        await new Promise(r => setTimeout(r, 500));
+                    }
+                }
+            }
+
+            async generateSinglePage(pageNum, totalPages, checkedItems, carryItems) {
+                const renderPrintItem = (item) => `
+                    <div class="print-item">
+                        <div style="display:flex; align-items:center;">
+                            <div class="print-box"></div>
+                            <div>
+                                <div style="font-weight:600; font-size:13px; color:#333;">
+                                    <span style="color:#666; font-weight:bold; font-size:12px; margin-right:4px;">x${item.quantity}</span>
+                                    ${item.text}
+                                </div>
+                                <div style="font-size:11px; color:#999; margin-top:1px;">
+                                    <span>${CATEGORIES.find(c => c.id === item.category)?.name}</span>
+                                    ${item.isLocalBuy ? '<span style="color:#0d9488; font-weight:bold; margin-left:4px;">[当地购入]</span>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const printContainer = document.getElementById('print-area');
+                printContainer.innerHTML = `
+                    <div style="background-color:#0f172a; color:white; padding:20px 32px; margin-bottom:20px;">
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                            <div style="display:flex; align-items:center; gap:16px;">
+                                <span style="background:white; color:#0f172a; padding:8px; border-radius:8px; display:flex; align-items:center; justify-content:center; width:40px; height:40px; box-sizing:border-box;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M6 20h0a4 4 0 0 1 4 4"/><path d="M14 20h0a4 4 0 0 1 4 4"/><path d="M2 20h20"/><path d="M10 20a4 4 0 0 1 4-4h0a4 4 0 0 1 4 4"/><path d="M2 16h20"/><path d="M2 12h20"/><path d="M2 8h20"/><path d="M2 4h20"/>
+                                    </svg>
+                                </span>
+                                <div>
+                                    <h1 style="font-size:20px; font-weight:bold; margin:0; line-height:1.2;">旅行物品清单 ${totalPages > 1 ? `(${pageNum}/${totalPages})` : ''}</h1>
+                                    <p style="font-size:11px; opacity:0.8; margin-top:2px; font-weight:normal;">祝您旅途愉快！</p>
+                                </div>
+                            </div>
+                            <div style="text-align:right; border-left:1px solid rgba(255,255,255,0.2); padding-left:24px;">
+                                <p style="font-size:10px; text-transform:uppercase; opacity:0.6; margin-bottom:2px; letter-spacing:1px;">Generated Date</p>
+                                <p style="font-size:13px; font-weight:bold; font-family:monospace;">${new Date().toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="padding:0 32px 32px 32px; display:flex; gap:32px;">
+                        <div class="print-col">
+                             <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; border-bottom:2px solid #fdba74; padding-bottom:6px;">
+                                <div style="background:#ffedd5; padding:5px; border-radius:4px; color:#c2410c;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                                </div>
+                                <h2 style="font-size:16px; font-weight:bold; color:#9a3412; margin:0;">托运行李</h2>
+                            </div>
+                            <div>
+                                ${checkedItems.map(renderPrintItem).join('') || '<div style="color:#999; font-style:italic; font-size:13px; padding:10px 0;">本页无托运物品</div>'}
+                            </div>
+                        </div>
+
+                        <div class="print-col">
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; border-bottom:2px solid #d8b4fe; padding-bottom:6px;">
+                                <div style="background:#f3e8ff; padding:5px; border-radius:4px; color:#7e22ce;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+                                </div>
+                                <h2 style="font-size:16px; font-weight:bold; color:#6b21a8; margin:0;">手提行李</h2>
+                            </div>
+                            <div>
+                                ${carryItems.map(renderPrintItem).join('') || '<div style="color:#999; font-style:italic; font-size:13px; padding:10px 0;">本页无手提物品</div>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                try {
+                    window.scrollTo(0, 0);
+                    const canvas = await html2canvas(printContainer, { 
+                        scale: 2, 
+                        useCORS: true,
+                        width: 794,
+                        height: 1123,
+                        windowWidth: 794,
+                        onclone: (clonedDoc) => {
+                            const clonedArea = clonedDoc.getElementById('print-area');
+                            clonedArea.style.transform = 'none';
+                            clonedArea.style.left = '0';
+                            clonedArea.style.top = '0';
+                            clonedArea.style.position = 'absolute';
+                            clonedArea.style.zIndex = '9999';
+                        }
+                    });
+                    
+                    const link = document.createElement('a');
+                    link.download = `旅行清单_${new Date().toLocaleDateString()}_Page${pageNum}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                } catch (err) {
+                    console.error(err);
+                    alert(`第 ${pageNum} 页生成失败，请重试`);
+                }
+            }
+        }
+
+        const app = new App();
+    </script>
+</body>
+</html>
